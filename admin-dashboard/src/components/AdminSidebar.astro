@@ -1,0 +1,36 @@
+---
+const navItems = [
+  { label: 'Dashboard Overview', active: true },
+  { label: 'Form Submissions', badge: 14 },
+  { label: 'Media Analytics' },
+  { label: 'UCO Team Calendar' },
+  { label: 'System Settings' },
+];
+---
+
+<aside class="w-64 bg-[#0A1C5C] font-sans text-slate-300 h-screen fixed top-0 left-0 z-30 flex flex-col p-6 border-r border-blue-950">
+  <div class="flex flex-col items-center text-center border-b border-blue-900/60 pb-6 mb-6">
+    <img 
+      src="/images/uco-logo.png" 
+      alt="AdZU UCO Logo" 
+      class="w-60 h-auto object-contain drop-shadow-sm"
+    />
+  </div>
+
+  <nav class="flex-grow space-y-1 overflow-y-auto no-scrollbar">
+    {navItems.map(item => (
+      <a href="#" class={`flex items-center justify-between px-4 py-2.5 rounded-xl text-[13px] font-semibold tracking-wide transition-all duration-150 ${item.active ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/40' : 'hover:bg-blue-900/40 hover:text-white text-blue-200/80'}`}>
+        <span class="flex-grow">{item.label}</span>
+        {item.badge && <span class="bg-rose-500 text-white text-[10px] font-black rounded-full px-2 py-0.5 ml-2 min-w-[20px] text-center">{item.badge}</span>}
+      </a>
+    ))}
+  </nav>
+
+  <div class="mt-auto pt-5 border-t border-blue-900/60 flex items-center gap-3">
+    <div class="w-9 h-9 bg-blue-900/80 rounded-full flex items-center justify-center text-white text-xs font-bold border border-blue-800">AD</div>
+    <div class="truncate">
+      <p class="text-xs font-bold text-white truncate tracking-wide">UCO Admin</p>
+      <p class="text-[11px] font-medium text-blue-300/60 truncate">admin@adzu.edu.ph</p>
+    </div>
+  </div>
+</aside>

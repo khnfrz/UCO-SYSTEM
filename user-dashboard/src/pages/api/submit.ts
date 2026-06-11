@@ -11,7 +11,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ message: 'Invalid JSON input', error: error.message }), { status: 400 });
   }
 
-  const dirPath = 'C:\\Users\\ASUS\\Desktop\\uco system\\responsesDB';
+  const dirPath = path.join(process.cwd(), '..', 'responsesDB');
   const filePath = path.join(dirPath, 'submissions.xlsx');
 
   // Ensure directory exists

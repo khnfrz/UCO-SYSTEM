@@ -1,0 +1,31 @@
+---
+import AdminSidebar from '../components/AdminSidebar.astro';
+import AdminHeader from '../components/AdminHeader.astro';
+import DashboardContent from '../components/DashboardContent.jsx';
+import '../styles/global.css';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Droitdash Admin - Viewer Demographics</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body class="bg-gray-100">
+
+  <div class="flex min-h-screen bg-slate-50">
+    <AdminSidebar />
+    
+    <div class="pl-64 flex flex-col w-full">
+      <AdminHeader />
+      
+      <main class="flex-1">
+        <DashboardContent client:load /> 
+      </main>
+    </div>
+  </div>
+
+</body>
+</html>
