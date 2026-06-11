@@ -41,9 +41,31 @@ export default function FormContainer() {
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Final Form Data:', formData);
-    setSubmitted(true);
+  const handleSubmit = async () => {
+    const payload = {
+      name: 'N/A', // Assuming name is not explicitly collected in current steps
+      email: formData.email,
+      requestType: formData.requestType,
+      details: JSON.stringify(formData.requestDetails)
+    };
+    
+    console.log('Sending payload:', JSON.stringify(payload));
+    
+    try {
+      const response = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        const errorText = await response.text();
+        console.error('Submission failed:', errorText);
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+    }
   };
 
   if (submitted) {

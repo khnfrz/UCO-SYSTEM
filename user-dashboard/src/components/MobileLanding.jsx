@@ -1,42 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 const mockLogs = [
-  { id: 1, type: 'Official AdZU Social Media Accounts', date: 'June 10, 2026', status: 'Pending', color: 'bg-amber-100 text-amber-700' },
-  { id: 2, type: 'Photo/Video Documentation', date: 'June 08, 2026', status: 'In-Process', color: 'bg-blue-100 text-blue-700' },
-  { id: 3, type: 'Print Media (Design/Layout)', date: 'June 05, 2026', status: 'Completed', color: 'bg-green-100 text-green-700' },
-  { id: 4, type: 'Local Media Services', date: 'June 01, 2026', status: 'Rejected', color: 'bg-rose-100 text-rose-700' },
+  {
+    id: 1,
+    type: "Official AdZU Social Media Accounts",
+    date: "June 10, 2026",
+    status: "Pending",
+    color: "bg-amber-100 text-amber-700",
+  },
+  {
+    id: 2,
+    type: "Photo/Video Documentation",
+    date: "June 08, 2026",
+    status: "In-Process",
+    color: "bg-blue-100 text-blue-700",
+  },
+  {
+    id: 3,
+    type: "Print Media (Design/Layout)",
+    date: "June 05, 2026",
+    status: "Completed",
+    color: "bg-green-100 text-green-700",
+  },
+  {
+    id: 4,
+    type: "Local Media Services",
+    date: "June 01, 2026",
+    status: "Rejected",
+    color: "bg-rose-100 text-rose-700",
+  },
 ];
 
 const statusFilters = [
-  { label: 'Pending', count: 1, color: 'bg-amber-500' },
-  { label: 'In-Process', count: 1, color: 'bg-blue-500' },
-  { label: 'Completed', count: 8, color: 'bg-green-500' },
-  { label: 'Rejected', count: 0, color: 'bg-rose-500' },
+  { label: "Pending", count: 1, color: "bg-amber-500" },
+  { label: "In-Process", count: 1, color: "bg-blue-500" },
+  { label: "Completed", count: 8, color: "bg-green-500" },
+  { label: "Rejected", count: 0, color: "bg-rose-500" },
 ];
 
 export default function MobileLanding({ onCreateRequest }) {
   return (
     <div className="flex flex-col space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
-      
       {/* Top Section: Dashboard Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
         {/* Left/Main Column: Request Logs */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-slate-800">Request Dashboard</h2>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Activity Logs</span>
+            <h2 className="text-xl font-bold text-slate-800">
+              Request Dashboard
+            </h2>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+              Activity Logs
+            </span>
           </div>
 
           {/* Status Quick Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {statusFilters.map((filter) => (
-              <div key={filter.label} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+              <div
+                key={filter.label}
+                className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
+              >
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`w-2 h-2 rounded-full ${filter.color}`}></div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">{filter.label}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">
+                    {filter.label}
+                  </span>
                 </div>
-                <p className="text-3xl font-black text-slate-900">{filter.count}</p>
+                <p className="text-3xl font-black text-slate-900">
+                  {filter.count}
+                </p>
               </div>
             ))}
           </div>
@@ -44,22 +77,39 @@ export default function MobileLanding({ onCreateRequest }) {
           {/* Recent Activity List */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden mt-8">
             <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-               <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Recent Submissions</p>
-               <button className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors uppercase">View All History</button>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
+                Recent Submissions
+              </p>
+              <button className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors uppercase">
+                View All History
+              </button>
             </div>
             <div className="divide-y divide-slate-50">
               {mockLogs.map((log) => (
-                <div key={log.id} className="p-5 flex items-center justify-between hover:bg-slate-50/50 transition-colors group">
+                <div
+                  key={log.id}
+                  className="p-5 flex items-center justify-between hover:bg-slate-50/50 transition-colors group"
+                >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                      {log.type.includes('Social') ? '📱' : log.type.includes('Photo') ? '📸' : '📄'}
+                      {log.type.includes("Social")
+                        ? "📱"
+                        : log.type.includes("Photo")
+                          ? "📸"
+                          : "📄"}
                     </div>
                     <div className="flex flex-col">
-                      <p className="text-sm font-bold text-slate-800">{log.type}</p>
-                      <p className="text-[11px] text-slate-400 font-medium">{log.date} • ID: #00{log.id}</p>
+                      <p className="text-sm font-bold text-slate-800">
+                        {log.type}
+                      </p>
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        {log.date} • ID: #00{log.id}
+                      </p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${log.color}`}>
+                  <span
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${log.color}`}
+                  >
                     {log.status}
                   </span>
                 </div>
@@ -74,17 +124,26 @@ export default function MobileLanding({ onCreateRequest }) {
             {/* Decorative Background Elements */}
             <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 bg-blue-400 opacity-10 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-1000"></div>
             <div className="absolute bottom-0 left-0 -ml-12 -mb-12 w-40 h-40 bg-indigo-500 opacity-10 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-1000"></div>
-            
+
             <div className="relative z-10 flex flex-col h-full justify-center">
-              <div className="w-20 h-20 bg-white/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 backdrop-blur-xl border border-white/20 shadow-inner group-hover:rotate-12 transition-transform duration-500">
-                <span className="text-4xl">✨</span>
+              <div className="w-32 h-32 flex items-center justify-center mx-auto mb-6">
+                <span className="text-4xl">
+                  <img
+                    src="/images/uco-logo.png"
+                    alt="AdZU UCO Logo"
+                    className="w-34 md:w-38 h-auto object-contain drop-shadow-md"
+                  />
+                </span>
               </div>
-              <h3 className="text-2xl font-black text-white mb-3 tracking-tight">Need Publicity?</h3>
+              <h3 className="text-2xl font-black text-white mb-3 tracking-tight">
+                Need Publicity?
+              </h3>
               <p className="text-blue-100/60 text-sm mb-10 leading-relaxed font-medium">
-                Submit your media requests to UCO for events, social media posts, and design layout services.
+                Submit your media requests to UCO for events, social media
+                posts, and design layout services.
               </p>
-              
-              <button 
+
+              <button
                 onClick={onCreateRequest}
                 className="w-full py-5 bg-white text-[#0A1C5C] rounded-[1.5rem] font-black text-sm tracking-[0.15em] uppercase shadow-xl hover:bg-indigo-50 hover:-translate-y-1 active:scale-95 transition-all duration-300"
               >
@@ -93,21 +152,23 @@ export default function MobileLanding({ onCreateRequest }) {
 
               <div className="mt-8 flex items-center justify-center gap-6">
                 <div className="text-center">
-                  <p className="text-[10px] font-black text-blue-300/40 uppercase tracking-widest">Processing</p>
+                  <p className="text-[10px] font-black text-blue-300/40 uppercase tracking-widest">
+                    Processing
+                  </p>
                   <p className="text-lg font-bold text-white">3 Days</p>
                 </div>
                 <div className="w-px h-8 bg-white/10"></div>
                 <div className="text-center">
-                  <p className="text-[10px] font-black text-blue-300/40 uppercase tracking-widest">Support</p>
+                  <p className="text-[10px] font-black text-blue-300/40 uppercase tracking-widest">
+                    Support
+                  </p>
                   <p className="text-lg font-bold text-white">L2025</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
       </div>
-
     </div>
   );
 }
