@@ -7,12 +7,25 @@ const requestTypes = [
   { label: 'Photo/Video Documentation', desc: 'Event Highlights', icon: '📸' },
   { label: 'Local Media and Other Services', desc: 'Press releases & partnerships', icon: '📰' },
   { label: 'File Photos', desc: 'Archive retrieval', icon: '📁' },
-  { label: 'Facebook Live', desc: 'Live event streaming', icon: '🎥' }
+  { label: 'Facebook Live', desc: 'Live event streaming', icon: '🎥' },
+  { label: 'Mascot', desc: 'Mascot appearance and engagement', icon: '🦅' }
 ];
 
 export default function FormStep2({ formData, setFormData, onNext, onPrev }) {
   const handleChange = (val) => {
-    setFormData({ ...formData, requestType: val });
+    const currentTypes = Array.isArray(formData.requestType) ? formData.requestType : (formData.requestType ? [formData.requestType] : []);
+    let newTypes;
+    if (currentTypes.includes(val)) {
+      newTypes = currentTypes.filter(t => t !== val);
+    } else {
+      newTypes = [...currentTypes, val];
+    }
+    setFormData({ ...formData, requestType: newTypes });
+  };
+
+  const isSelected = (label) => {
+    const currentTypes = Array.isArray(formData.requestType) ? formData.requestType : (formData.requestType ? [formData.requestType] : []);
+    return currentTypes.includes(label);
   };
 
   return (
@@ -27,16 +40,16 @@ export default function FormStep2({ formData, setFormData, onNext, onPrev }) {
           <button 
             key={type.label} 
             onClick={() => handleChange(type.label)}
-            className={`flex items-center gap-4 p-5 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${formData.requestType === type.label ? 'border-indigo-600 bg-indigo-50/50 shadow-lg shadow-indigo-100' : 'border-slate-50 bg-slate-50/30 hover:border-slate-200 hover:bg-slate-50'}`}
+            className={`flex items-center gap-4 p-5 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${isSelected(type.label) ? 'border-indigo-600 bg-indigo-50/50 shadow-lg shadow-indigo-100' : 'border-slate-50 bg-slate-50/30 hover:border-slate-200 hover:bg-slate-50'}`}
           >
-            <div className={`w-12 h-12 flex items-center justify-center rounded-2xl text-2xl transition-colors ${formData.requestType === type.label ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400 shadow-sm'}`}>
+            <div className={`w-12 h-12 flex items-center justify-center rounded-2xl text-2xl transition-colors ${isSelected(type.label) ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400 shadow-sm'}`}>
               {type.icon}
             </div>
             <div className="flex flex-col">
-              <span className={`text-sm font-black tracking-tight ${formData.requestType === type.label ? 'text-indigo-900' : 'text-slate-700'}`}>{type.label}</span>
+              <span className={`text-sm font-black tracking-tight ${isSelected(type.label) ? 'text-indigo-900' : 'text-slate-700'}`}>{type.label}</span>
               <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-500">{type.desc}</span>
             </div>
-            {formData.requestType === type.label && (
+            {isSelected(type.label) && (
                <div className="ml-auto w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
                   <span className="text-white text-[10px]">✓</span>
                </div>
@@ -54,8 +67,8 @@ export default function FormStep2({ formData, setFormData, onNext, onPrev }) {
         </button>
         <button 
           onClick={onNext} 
-          disabled={!formData.requestType}
-          className={`flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${formData.requestType ? 'bg-[#0A1C5C] text-white hover:bg-indigo-700 hover:-translate-y-1 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+          disabled={!formData.requestType || formData.requestType.length === 0}
+          className={`flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${(formData.requestType && formData.requestType.length > 0) ? 'bg-[#0A1C5C] text-white hover:bg-indigo-700 hover:-translate-y-1 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
         >
           Continue
         </button>

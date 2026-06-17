@@ -47,7 +47,7 @@ export default function FormStep1({ formData, setFormData, onNext }) {
             value={formData.email || ''}
             onChange={handleChange}
             placeholder="your-email@adzu.edu.ph"
-            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all text-sm font-medium"
+            className="w-full p-4 bg-slate-50 border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all text-sm font-medium"
             required
           />
           <p className="text-[10px] text-slate-400 mt-2 font-medium italic">Your account details will be recorded for file tracking.</p>
@@ -69,7 +69,7 @@ export default function FormStep1({ formData, setFormData, onNext }) {
         <button 
           onClick={onNext} 
           disabled={!isComplete}
-          className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${isComplete ? 'bg-[#0A1C5C] text-white hover:bg-indigo-700 hover:-translate-y-1 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+          className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${isComplete ? 'bg-[#0A1C5C] text-white hover:bg-indigo-700 hover:-translate-y-1 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
         >
           Confirm and Start Request
         </button>

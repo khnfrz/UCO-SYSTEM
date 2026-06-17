@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ResponsiveLayout from '../components/layout/ResponsiveLayout.jsx';
+import SubmissionsContent from '../components/SubmissionsContent.jsx';
+import '../styles/global.css';
+---
+
+<Layout title="All Submissions | UCO Admin">
+  <ResponsiveLayout client:load>
+    <SubmissionsContent client:load /> 
+  </ResponsiveLayout>
+</Layout>

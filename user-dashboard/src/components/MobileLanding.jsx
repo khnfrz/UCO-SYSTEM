@@ -1,44 +1,47 @@
-import React, { useState } from "react";
-
-const mockLogs = [
-  {
-    id: 1,
-    type: "Official AdZU Social Media Accounts",
-    date: "June 10, 2026",
-    status: "Pending",
-    color: "bg-amber-100 text-amber-700",
-  },
-  {
-    id: 2,
-    type: "Photo/Video Documentation",
-    date: "June 08, 2026",
-    status: "In-Process",
-    color: "bg-blue-100 text-blue-700",
-  },
-  {
-    id: 3,
-    type: "Print Media (Design/Layout)",
-    date: "June 05, 2026",
-    status: "Completed",
-    color: "bg-green-100 text-green-700",
-  },
-  {
-    id: 4,
-    type: "Local Media Services",
-    date: "June 01, 2026",
-    status: "Rejected",
-    color: "bg-rose-100 text-rose-700",
-  },
-];
-
-const statusFilters = [
-  { label: "Pending", count: 1, color: "bg-amber-500" },
-  { label: "In-Process", count: 1, color: "bg-blue-500" },
-  { label: "Completed", count: 8, color: "bg-green-500" },
-  { label: "Rejected", count: 0, color: "bg-rose-500" },
-];
+import React, { useState, useEffect } from "react";
 
 export default function MobileLanding({ onCreateRequest }) {
+  const [metrics, setMetrics] = useState({ pending: 0, inProcess: 0, completed: 0, rejected: 0 });
+  const [recentLogs, setRecentLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (!savedUser) return;
+    const user = JSON.parse(savedUser);
+
+    Promise.all([
+      fetch(`/api/user-metrics?userId=${user.id}`).then(res => res.json()),
+      fetch(`/api/my-submissions?userId=${user.id}`).then(res => res.json())
+    ]).then(([metricsData, submissionsData]) => {
+      setMetrics(metricsData);
+      if (Array.isArray(submissionsData)) {
+        setRecentLogs(submissionsData.slice(0, 4));
+      }
+      setLoading(false);
+    }).catch(err => {
+      console.error(err);
+      setLoading(false);
+    });
+  }, []);
+
+  const statusFilters = [
+    { label: "Pending", count: metrics.pending, color: "bg-amber-500" },
+    { label: "In-Process", count: metrics.inProcess, color: "bg-blue-500" },
+    { label: "Completed", count: metrics.completed, color: "bg-green-500" },
+    { label: "Rejected", count: metrics.rejected, color: "bg-rose-500" },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-pulse text-slate-400 font-black uppercase tracking-[0.3em] text-xs">
+          Syncing Dashboard...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
       {/* Top Section: Dashboard Overview */}
@@ -80,47 +83,63 @@ export default function MobileLanding({ onCreateRequest }) {
               <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
                 Recent Submissions
               </p>
-              <button className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors uppercase">
+              <a href="/history" className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors uppercase">
                 View All History
-              </button>
+              </a>
             </div>
             <div className="divide-y divide-slate-50">
-              {mockLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className="p-5 flex items-center justify-between hover:bg-slate-50/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                      {log.type.includes("Social")
-                        ? "📱"
-                        : log.type.includes("Photo")
-                          ? "📸"
-                          : "📄"}
-                    </div>
-                    <div className="flex flex-col">
-                      <p className="text-sm font-bold text-slate-800">
-                        {log.type}
-                      </p>
-                      <p className="text-[11px] text-slate-400 font-medium">
-                        {log.date} • ID: #00{log.id}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${log.color}`}
+              {recentLogs.length > 0 ? recentLogs.map((log) => {
+                const status = log.status || 'Pending';
+                let statusColor = "bg-amber-100 text-amber-700";
+                if (status === 'In-process') statusColor = "bg-blue-100 text-blue-700";
+                else if (status === 'Completed') statusColor = "bg-green-100 text-green-700";
+                else if (status === 'Rejected') statusColor = "bg-rose-100 text-rose-700";
+
+                return (
+                  <a
+                    key={log.id}
+                    href={`/submission?id=${log.id}`}
+                    className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0"
                   >
-                    {log.status}
-                  </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        {log.request_type.includes("Social")
+                          ? "📱"
+                          : log.request_type.includes("Photo")
+                            ? "📸"
+                            : "📄"}
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                          {log.request_type}
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-medium">
+                          {new Date(log.created_at).toLocaleDateString()} • ID: #{log.id}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${statusColor}`}
+                      >
+                        {status}
+                      </span>
+                      <span className="text-slate-300 group-hover:text-indigo-400 transition-colors text-lg">→</span>
+                    </div>
+                  </a>
+                );
+              }) : (
+                <div className="p-10 text-center">
+                  <p className="text-xs text-slate-400 font-medium italic">No recent activity to show.</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
 
         {/* Right Column: Action Card */}
         <div className="lg:col-span-1">
-          <div className="bg-[#0A1C5C] p-8 md:p-10 rounded-[2.5rem] shadow-2xl shadow-blue-900/30 text-center relative overflow-hidden group lg:sticky lg:top-28">
+          <div className="bg-[#0A1C5C] p-8 md:p-10 rounded-[2.5rem] shadow-2xl shadow-blue-900/30 border border-transparent text-center relative overflow-hidden group lg:sticky lg:top-28">
             {/* Decorative Background Elements */}
             <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 bg-blue-400 opacity-10 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-1000"></div>
             <div className="absolute bottom-0 left-0 -ml-12 -mb-12 w-40 h-40 bg-indigo-500 opacity-10 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-1000"></div>
@@ -131,7 +150,7 @@ export default function MobileLanding({ onCreateRequest }) {
                   <img
                     src="/images/uco-logo.png"
                     alt="AdZU UCO Logo"
-                    className="w-34 md:w-38 h-auto object-contain drop-shadow-md"
+                    className="w-34 md:w-38 h-auto object-contain drop-shadow-md brightness-110"
                   />
                 </span>
               </div>

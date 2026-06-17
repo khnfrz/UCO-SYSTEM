@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Split Screen Layout</title>
+    <style>
+      /* Reset default margins to ensure full-screen sizing works */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+      }
+
+       .sidebar {
+        flex: 0.5;
+        background-color: #e0e0e0;
+        padding: 40px;
+        height: 100vh;
+        width: 50%; /* Temporary width to visualize empty divs */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+        gap: 20px; /* Adds space between the two panels */
+        /* Gives the section a minimum height of the full viewport */
+        min-height: 100vh;
+      }
+
+      .preview {
+        border-radius: 50px;
+        flex: 1;
+        background-color: #f0f0f0;
+        padding: 40px;
+        height: 100vh; /* Temporary height to visualize empty divs */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .details {
+        flex: 0.5;
+        background-color: #e0e0e0;
+        padding: 40px;
+        height: 100vh; /* Temporary height to visualize empty divs */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar"></div>
+    <section>
+      <div class="preview">
+        <h2>Preview Panel</h2>
+      </div>
+      <div class="details">
+        <h2>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veniam doloremque, consequuntur autem dicta in impedit rerum minus odio! Enim esse dolorem voluptas explicabo incidunt odit nam perferendis veniam animi sunt.</h2>
+      </div>
+    </section>
+  </body>
+</html>

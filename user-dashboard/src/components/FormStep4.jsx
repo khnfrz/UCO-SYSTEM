@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 export default function FormStep4({ formData, setFormData, onSubmit, onPrev }) {
+  const fileInputRef = useRef(null);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -12,8 +14,41 @@ export default function FormStep4({ formData, setFormData, onSubmit, onPrev }) {
     });
   };
 
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    
+    // Allowed MIME types
+    const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+        'application/pdf', // .pdf
+        'image/jpeg', 'image/png', 'image/gif', // Images
+        'video/mp4', 'video/quicktime', 'video/x-matroska', // Videos (mp4, hevc, mkv)
+        'audio/mpeg', 'audio/wav' // Audio
+    ];
+
+    const validFiles = selectedFiles.filter(file => 
+        allowedTypes.includes(file.type) || 
+        file.name.endsWith('.docx') || 
+        file.name.endsWith('.pdf') || 
+        file.name.endsWith('.mp4') || 
+        file.name.endsWith('.mkv')
+    );
+
+    if (validFiles.length !== selectedFiles.length) {
+        alert("Some files were rejected. Please only upload .docx, .pdf, images, videos, or audio files.");
+    }
+
+    setFormData({
+      ...formData,
+      eventInfo: {
+        ...formData.eventInfo,
+        files: validFiles
+      }
+    });
+  };
+
   const info = formData.eventInfo || {};
-  const isComplete = info.eventDetails && info.filesUploaded;
+  const isComplete = info.eventDetails && info.files && info.files.length > 0;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -31,25 +66,46 @@ export default function FormStep4({ formData, setFormData, onSubmit, onPrev }) {
             onChange={handleChange}
             rows="5"
             placeholder="Please provide comprehensive details about the event, intended message, and specific posting requirements..."
-            className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all text-sm font-medium resize-none"
+            className="w-full p-4 bg-slate-50 border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all text-sm font-medium resize-none"
           ></textarea>
         </div>
 
-        <div className={`p-8 border-2 border-dashed rounded-[2rem] transition-all text-center cursor-pointer group ${info.filesUploaded ? 'bg-green-50 border-green-200' : 'bg-slate-50/50 border-slate-200 hover:border-indigo-300 hover:bg-slate-50'}`}
-             onClick={() => setFormData({...formData, eventInfo: {...info, filesUploaded: true}})}>
+        {/* Template Download Section */}
+        <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex items-center justify-between">
+            <span className="text-xs font-bold text-indigo-900">Need the template?</span>
+            <a 
+                href="/files/Press-Release-Template-2025-ver (1).docx" 
+                download
+                className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 underline"
+            >
+                Download Template
+            </a>
+        </div>
+
+        {/* File Upload Section */}
+        <div 
+          className={`p-8 border-2 border-dashed rounded-[2rem] transition-all text-center cursor-pointer group ${info.files && info.files.length > 0 ? 'bg-green-50 border-green-200' : 'bg-slate-50/50 border-slate-200 hover:border-indigo-300 hover:bg-slate-50'}`}
+          onClick={() => fileInputRef.current.click()}
+        >
+          <input 
+            type="file" 
+            name="files"
+            accept=".docx,.pdf,image/*,video/*,audio/*"
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            multiple 
+            className="hidden" 
+          />
           <div className="flex flex-col items-center">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 transition-transform group-hover:scale-110 ${info.filesUploaded ? 'bg-green-100' : 'bg-white shadow-sm'}`}>
-              {info.filesUploaded ? '✅' : '📁'}
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 transition-transform group-hover:scale-110 ${info.files && info.files.length > 0 ? 'bg-green-100' : 'bg-white shadow-sm'}`}>
+              {info.files && info.files.length > 0 ? '✅' : '📁'}
             </div>
-            <p className={`text-sm font-black tracking-tight ${info.filesUploaded ? 'text-green-700' : 'text-slate-700'}`}>
-              {info.filesUploaded ? 'Files Successfully Attached' : 'Attach Event Materials*'}
+            <p className={`text-sm font-black tracking-tight ${info.files && info.files.length > 0 ? 'text-green-700' : 'text-slate-700'}`}>
+              {info.files && info.files.length > 0 ? `${info.files.length} File(s) Selected` : 'Attach Filled Template & Media*'}
             </p>
             <p className="text-[10px] text-slate-400 mt-2 leading-relaxed max-w-[200px]">
-              Press Release Template & up to 4 high-quality photos.
+              Upload the filled template (Docx/PDF) & up to 4 high-quality photos/videos.
             </p>
-            {!info.filesUploaded && (
-               <button className="mt-4 px-6 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm hover:shadow-md transition-all">Select Files</button>
-            )}
           </div>
         </div>
 
@@ -81,7 +137,7 @@ export default function FormStep4({ formData, setFormData, onSubmit, onPrev }) {
         <button 
           onClick={onSubmit} 
           disabled={!isComplete}
-          className={`flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl shadow-indigo-200 ${isComplete ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:-translate-y-1 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+          className={`flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl shadow-indigo-200 ${isComplete ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:-translate-y-1 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
         >
           Submit Request
         </button>

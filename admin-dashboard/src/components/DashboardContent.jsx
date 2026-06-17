@@ -1,302 +1,441 @@
-import React, { useState, useEffect } from 'react';
-import Chart from 'react-apexcharts';
+import React, { useState, useEffect } from "react";
+import Chart from "react-apexcharts";
+import { useResponsiveLayout } from "./layout/ResponsiveLayout";
+import { DesktopDashboardWrapper } from "./layout/DesktopViewing";
+import { MobileDashboardWrapper } from "./layout/MobileViewing";
+import SearchBar from "./SearchBar";
+import TabList from "./TabList";
 
-// --- GOOGLE FORMS DATA SIMULATION SERVICE ---
-const getFormSubmissionData = (period) => {
-  const multipliers = { '12 Months': 1.5, '6 Months': 1.0, '30 Days': 0.7, '7 Days': 0.3 };
-  const mult = multipliers[period] || 1;
+const offices = [
+  "Office of the President", "Vice President for Administration", "Vice President for Basic Education", "Vice President for Higher Education",
+  "Ateneo Center for Testing", "Data Protection Office (DPO)", "Human Resource Administration and Development Office (HRADO)", "Lantaka Administration", "Physical Plant Office (PPO)", "Purchasing & Custodial Office (PCO)", "University Archives", "University Safety Office", "University Security Office (USO)",
+  "Ateneo Center for Culture & the Arts (ACCA)", "Ateneo Center for Environment & Sustainability (ACES)", "Ateneo Center for Leadership and Governance (ACLG)", "Ateneo Learning and Teaching Excellence Center (ALTEC)", "Ateneo Peace Institute (API)", "Center for Community Extensions Services (CCES)", "Social Awareness and Community Service Involvement (SACSI)", "Social Development Office",
+  "Advancement Office", "Alumni and Career Excellence (ACE) Office", "Ateneo Center for Entrepreneurship, Innovation, and Development (ACEND)", "Ateneo Zamboanga-Mindanao Institute (AZMI)", "AZUL Hub", "Center for Digital and Blended Learning (CDBL)", "Ethics Review Board (ERB)", "Global Paths – Internationalization (GPI) Office", "Innovation and Technology Support Office (ITSO)", "Office of Mission Integration and Leadership Development (OMILD)", "Projects Office", "Quality Assurance and Strategic Management Office (QASMO)", "University Communications Office (UCO)", "University Research Office", "ZamPen Innohive Fabrication Laboratory (FabLab)"
+];
 
-  return {
-    metrics: [
-      { title: 'Total Responses Submitted', value: Math.round(342 * mult), change: '+18.2%' },
-      { title: 'Pending Review', value: Math.round(14 * mult), change: 'Requires Action' },
-      { title: 'Fulfilled Requests', value: Math.round(328 * mult), change: '95.9% Rate' },
-    ],
-    submissionChart: {
-      series: [{
-        name: 'Form Submissions',
-        data: [
-          Math.round(25*mult), Math.round(30*mult), Math.round(45*mult), Math.round(22*mult), 
-          Math.round(55*mult), Math.round(62*mult), Math.round(48*mult), Math.round(38*mult), 
-          Math.round(74*mult), Math.round(85*mult), Math.round(40*mult), Math.round(50*mult)
-        ],
-      }],
-      avgPerMonth: Math.round(47 * mult),
-      medianSubmissions: 45,
-    },
-    requestTypeChart: {
-      series: [
-        Math.round(115 * mult), // Social Media (Largest - Base Navy)
-        Math.round(72 * mult),  // Photo/Video Doc (Vibrant Sky Blue)
-        Math.round(58 * mult),  // Print Media (Soft Powder Blue)
-        Math.round(45 * mult),  // Website Story (Muted Navy)
-        Math.round(22 * mult),  // Local Media (Alternating Sky Blue)
-        Math.round(18 * mult),  // File Photos (Alternating Powder Blue)
-        Math.round(12 * mult)   // FB Live (Light Tint Accent)
-      ],
-      labels: [
-        'Official AdZU Social Media Accounts',
-        'Photo/Video Documentation',
-        'Print Media (Design/Layout)',
-        'Official AdZU Website (Story)',
-        'Local Media and Other Services',
-        'File Photos',
-        'Facebook Live'
-      ]
-    },
-    serviceTypeChart: {
-      series: [
-        Math.round(65 * mult),  // Posting by Official AdZU Social Media (Base Navy)
-        Math.round(42 * mult),  // Layout/Design and Posting of graphics (Vibrant Sky Blue)
-        Math.round(12 * mult)   // Other (Soft Powder Blue)
-      ],
-      labels: [
-        'Posting by Official AdZU Social Media Accounts (Text, photos, and videos)',
-        'Layout/Design and Posting of graphics (Social cards and infographics)',
-        'Other'
-      ]
-    },
-    submittedResponses: [
-      { id: 1, name: 'Dr. Jane Smith', dept: 'College of Science', type: 'Photo/Video Documentation', date: 'June 09, 2026', status: 'Pending' },
-      { id: 2, name: 'Prof. Alan Turing', dept: 'Computer Science', type: 'Official AdZU Social Media Accounts', date: 'June 08, 2026', status: 'In Progress' },
-      { id: 3, name: 'Coach Eric Red', dept: 'Athletics Department', type: 'Print Media (Design/Layout)', date: 'June 06, 2026', status: 'Completed' },
-      { id: 4, name: 'Sarah Jenkins', dept: 'Alumni Affairs', type: 'Official AdZU Website (Story)', date: 'June 05, 2026', status: 'Completed' },
-      { id: 5, name: 'Michael Chang', dept: 'Student Council', type: 'File Photos', date: 'June 02, 2026', status: 'Rejected' },
-    ].slice(0, Math.round(5 * mult)),
-  };
-};
+export default function DashboardContent({ officeName: initialOfficeName = null }) {
+  const { isMobile } = useResponsiveLayout();
+  const DashboardWrapper = isMobile ? MobileDashboardWrapper : DesktopDashboardWrapper;
 
-const periods = ['12 Months', '6 Months', '30 Days', '7 Days'];
-
-const statusColors = {
-  'Pending': 'text-amber-900 bg-amber-200/80',
-  'In Progress': 'text-blue-900 bg-blue-200/80',
-  'Completed': 'text-green-900 bg-green-200/80',
-  'Rejected': 'text-rose-900 bg-rose-200/80',
-};
-
-
-
-const CustomLegend = ({ labels, colors }) => (
-  <div className="flex flex-col gap-2 mt-4">
-    {labels.map((label, index) => (
-      <div key={label} className="flex items-center gap-2">
-        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[index % colors.length] }}></span>
-        <span className="text-xs text-slate-600 font-medium">{label}</span>
-      </div>
-    ))}
-  </div>
-);
-
-export default function DashboardContent() {
-  const [timePeriod, setTimePeriod] = useState('30 Days');
-  const [data, setData] = useState(getFormSubmissionData('30 Days'));
-  
-  // High-energy palette used for both charts and custom legends
-  const chartColors = ['#0A1C5C', '#4FA3FF', '#A4CFFF', '#1E3275', '#63AFFF', '#BCD8FF', '#05103B'];
+  const [metrics, setMetrics] = useState({ total: 0, pending: 0, inProcess: 0, completed: 0, rejected: 0 });
+  const [submissions, setSubmissions] = useState([]);
+  const [officeName, setOfficeName] = useState(initialOfficeName);
+  const [loading, setLoading] = useState(true);
+  const [velocityData, setVelocityData] = useState(new Array(12).fill(0));
+  const [requestTypeData, setRequestTypeData] = useState({
+    labels: [],
+    series: [],
+  });
+  const [serviceTypeData, setServiceTypeData] = useState({
+    labels: [],
+    series: [],
+  });
+  const [selectedMonth, setSelectedMonth] = useState(null); 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [currentPath, setCurrentPath] = useState('');
 
   useEffect(() => {
-    setData(getFormSubmissionData(timePeriod));
-  }, [timePeriod]);
+    if (typeof window !== 'undefined') {
+      setCurrentPath(window.location.pathname);
+    }
+  }, []);
 
-  const chartFontFamily = '"Plus Jakarta Sans", "Inter", sans-serif';
+  const chartColors = [
+    "#7595D6",
+    "#A4CFFF",
+    "#0A1C5C",
+    "#1E3275",
+    "#63AFFF",
+    "#BCD8FF",
+    "#05103B",
+  ];
 
-  // 1. Bar Chart Config with "Bright Tech" accents
+  useEffect(() => {
+    if (!officeName && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const nameFromUrl = params.get('office') || params.get('name');
+      if (nameFromUrl) {
+        setOfficeName(nameFromUrl);
+      }
+    }
+  }, [initialOfficeName]);
+
+  useEffect(() => {
+    setLoading(true);
+    const query = officeName ? `?office=${encodeURIComponent(officeName)}` : "";
+
+    Promise.all([
+      fetch(`/api/submissions${query}`).then(res => res.json()),
+      fetch(`/api/metrics${query}`).then(res => res.json())
+    ])
+    .then(([submissionsData, metricsData]) => {
+      const sortedData = [...submissionsData].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setSubmissions(sortedData);
+      setMetrics(metricsData.metrics);
+      const newVelocity = new Array(12).fill(0);
+      metricsData.velocity.forEach((v) => (newVelocity[v.month - 1] = v.count));
+      setVelocityData(newVelocity);
+
+      const normalizeService = (service) => {
+        const s = service?.toUpperCase();
+        if (s?.includes("POSTING BY OFFICIAL ADZU SOCIAL MEDIA ACCOUNTS")) return "POSTING BY OFFICIAL ADZU SOCIAL MEDIA ACCOUNTS (TEXT, PHOTOS,AND VIDEOS)";
+        if (s?.includes("LAYOUT/DESIGN AND POSTING OF GRAPHICS")) return "LAYOUT/DESIGN AND POSTING OF GRAPHICS (SOCIAL CARDS AND INFOGRAPHICS";
+        return "OTHER";
+      };
+
+      const normalizedServices = metricsData.serviceTypes.reduce((acc, curr) => {
+        const normalized = normalizeService(curr.service);
+        acc[normalized] = (acc[normalized] || 0) + curr.count;
+        return acc;
+      }, {});
+
+      setServiceTypeData({
+        labels: Object.keys(normalizedServices),
+        series: Object.values(normalizedServices),
+      });
+
+      setRequestTypeData({
+        labels: metricsData.requestTypes.map((r) => r.request_type),
+        series: metricsData.requestTypes.map((r) => r.count),
+      });
+      setLoading(false);
+    })
+    .catch((err) => {
+      console.error("Error fetching data:", err);
+      setLoading(false);
+    });
+  }, [officeName]);
+
+  if (loading) {
+    return (
+      <div className="p-8 space-y-8 animate-pulse">
+        <div className="h-10 bg-slate-200 rounded-lg w-full"></div>
+        <div className="grid grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => <div key={i} className="h-24 bg-slate-200 rounded-2xl"></div>)}
+        </div>
+        <div className="h-64 bg-slate-200 rounded-2xl"></div>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="h-64 bg-slate-200 rounded-2xl"></div>
+          <div className="h-64 bg-slate-200 rounded-2xl"></div>
+        </div>
+        <div className="h-96 bg-slate-200 rounded-2xl"></div>
+      </div>
+    );
+  }
+
   const barChartOptions = {
-    chart: { type: 'bar', height: 320, fontFamily: chartFontFamily, toolbar: { show: false }, background: 'transparent' },
-    plotOptions: { bar: { borderRadius: 6, columnWidth: '55%', distributed: true } },
-    // Inactive months use a clean slate gray, while primary/active data uses the vibrant tech palette highlights
-    colors: ['#cbd5e1', '#cbd5e1', '#cbd5e1', '#cbd5e1', '#cbd5e1', '#cbd5e1', '#cbd5e1', '#cbd5e1', '#A4CFFF', '#4FA3FF', '#0A1C5C', '#cbd5e1'], 
-    xaxis: {
-      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-      labels: { style: { colors: '#64748b' } }
+    chart: {
+      type: "bar",
+      height: 320,
+      toolbar: { show: false },
+      background: "transparent",
     },
-    yaxis: { labels: { style: { colors: '#64748b' } } },
-    grid: { borderColor: '#e2e8f0' },
+    plotOptions: {
+      bar: { borderRadius: 4, columnWidth: "60%", distributed: true },
+    },
+    colors: velocityData.map((_, i) => {
+      if (selectedMonth === null) {
+        return i === new Date().getMonth() ? "#547DBE" : "#A4CFFF";
+      }
+      return i === selectedMonth ? "#547DBE" : "#A4CFFF";
+    }),
+    xaxis: {
+      categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      labels: { style: { colors: "#A3AED0", fontSize: '10px', fontWeight: 'bold' } },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
+    },
+    yaxis: { show: false },
+    grid: { show: false },
     dataLabels: { enabled: false },
     legend: { show: false },
-    tooltip: { y: { formatter: (val) => `${val} Requests` } },
+    tooltip: {
+      custom: function({ series, seriesIndex, dataPointIndex, w }) {
+        const category = w.globals.labels[dataPointIndex];
+        const val = series[seriesIndex][dataPointIndex];
+        return `
+          <div class="p-4 bg-white rounded-xl shadow-lg border border-slate-100">
+            <div class="text-[12px] font-black text-[#1B2559] uppercase mb-1">${category}</div>
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 rounded-full bg-[#547DBE]"></div>
+              <span class="text-[11px] font-bold text-[#707EAE]">Submissions:</span>
+              <span class="text-[11px] font-black text-[#1B2559]">${val} Requests</span>
+            </div>
+          </div>
+        `;
+      },
+      shared: false,
+      intersect: true,
+    },
   };
 
-  // 2. Pie/Donut Chart Options Generator configured with the High Energy palette
-  const getDonutOptions = (labels, totalLabel) => ({
-    chart: { type: 'donut', height: 340, fontFamily: chartFontFamily, background: 'transparent' },
+  const getDonutOptions = (labels) => ({
+    chart: { type: "donut", background: "transparent" },
     labels: labels,
-    // Sequential high-energy looping: Base Navy, Vibrant Sky Blue, Soft Powder Blue, and safe contrast variations
-    colors: ['#0A1C5C', '#4FA3FF', '#A4CFFF', '#1E3275', '#63AFFF', '#BCD8FF', '#05103B'],
-    stroke: { width: 2, colors: ['#f8fafc'] }, // Blends clean stroke edges into your off-white card backgrounds
+    colors: chartColors,
+    stroke: { show: false },
     dataLabels: { enabled: false },
     legend: { show: false },
     plotOptions: {
       pie: {
         donut: {
-          size: '72%',
+          size: "65%",
           labels: {
-            show: true,
-            total: {
-              show: true,
-              label: totalLabel,
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#64748b',
-              formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0)
-            }
-          }
-        }
-      }
+            show: false
+          },
+        },
+      },
     },
-    tooltip: { y: { formatter: (val) => `${val} Submissions` } }
   });
 
-  return (
-    <div className="p-6 md:p-8 space-y-8 font-sans max-w-[1600px] mx-auto bg-slate-200 min-h-screen">
-      
-      {/* 1. View Navigation Filter Tabs */}
-      <div className="flex items-center gap-6 border-b border-gray-200 pb-2">
-        {['All Responses', 'By Department', 'By Media Type', 'Archived Forms'].map((tab, i) => (
-          <button key={tab} className={`pb-2 text-sm font-semibold transition ${i === 0 ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>{tab}</button>
-        ))}
-      </div>
+  const renderLegend = (labels) => (
+    <div className="flex flex-col gap-3">
+      {labels.map((label, i) => (
+        <div key={label} className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: chartColors[i % chartColors.length] }}></div>
+          <span className="text-[10px] font-black text-[#1B2559] uppercase tracking-wider">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
 
-      {/* 2. Status Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {data.metrics.map((metric, i) => (
-          <div key={i} className="bg-slate-50/90 p-6 rounded-2xl shadow-xs border border-slate-200/60">
-            <div className="flex justify-between items-start mb-2">
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{metric.title}</p>
-              <span className={`text-xs font-bold px-2 py-1 rounded-md ${i === 1 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}`}>
-                {metric.change}
-              </span>
-            </div>
-            <p className="text-4xl font-extrabold text-gray-900 mt-2">{metric.value}</p>
-          </div>
-        ))}
-      </div>
+  const getHorizontalBarOptions = (labels) => ({
+    chart: {
+      type: "bar",
+      height: 350,
+      toolbar: { show: false },
+      background: "transparent",
+    },
+    plotOptions: {
+      bar: {
+        borderRadius: 4,
+        horizontal: true,
+        barHeight: "70%",
+        distributed: true,
+        borderRadiusApplication: 'end',
+        minBarLength: 30,
+      },
+    },
+    colors: chartColors,
+    dataLabels: {
+      enabled: true,
+      formatter: (val) => val,
+      style: { colors: ["#1B2559"], fontSize: "12px", fontWeight: "bold" },
+    },
+    xaxis: {
+      categories: labels,
+      labels: { show: false },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: {
+      labels: {
+        style: { colors: "#1B2559", fontSize: "10px", fontWeight: "bold" },
+        maxWidth: 250,
+      },
+    },
+    grid: { show: false },
+    legend: { show: false },
+    tooltip: { theme: 'light' },
+  });
 
-      {/* 3. Main Velocity Bar Chart Component */}
-      <div className="bg-slate-50/90 p-6 rounded-2xl shadow-xs border border-slate-200/60 flex flex-col justify-between">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">Form Submission Velocity</h2>
-            <p className="text-xs text-gray-400">Total volume tracking across calendar months</p>
-          </div>
-          
-          <div className="flex items-center gap-1 bg-slate-200/60 p-1 rounded-xl text-xs font-medium">
-            {periods.map(period => (
-              <button 
-                key={period} 
-                onClick={() => setTimePeriod(period)}
-                className={`px-3 py-1.5 rounded-lg transition ${timePeriod === period ? 'bg-white shadow-xs text-gray-900 font-bold' : 'text-gray-500 hover:text-gray-900'}`}
+  const monthlyAverage = velocityData.reduce((a, b) => a + b, 0) / 12;
+
+  const officeMatches = offices.filter(o => o.toLowerCase().includes(searchQuery.toLowerCase()));
+  const submissionMatches = submissions.filter(s => 
+    (s.mName && s.mName.toLowerCase().includes(searchQuery.toLowerCase())) || 
+    (s.email && s.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const renderSearchResults = () => {
+    if (!searchQuery) return null;
+    return (
+      <div className="absolute top-full right-0 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 max-h-80 overflow-y-auto no-scrollbar py-2">
+        {officeMatches.length > 0 && (
+          <>
+            <div className="px-4 py-2 text-[9px] font-black text-[#A3AED0] uppercase tracking-widest bg-[#F4F7FE]">Offices</div>
+            {officeMatches.map(match => (
+              <div 
+                key={match} 
+                className="px-4 py-2.5 text-[11px] font-bold text-[#1B2559] hover:bg-[#F4F7FE] cursor-pointer transition-colors"
+                onClick={() => window.location.href = `/office?office=${encodeURIComponent(match)}`}
               >
-                {period}
-              </button>
+                {match}
+              </div>
             ))}
+          </>
+        )}
+        {submissionMatches.length > 0 && (
+          <>
+            <div className="px-4 py-2 text-[9px] font-black text-[#A3AED0] uppercase tracking-widest bg-[#F4F7FE] border-t border-slate-50">Submissions</div>
+            {submissionMatches.map(s => (
+              <div 
+                key={s.id} 
+                className="px-4 py-2.5 text-[11px] hover:bg-[#F4F7FE] cursor-pointer flex flex-col transition-colors"
+                onClick={() => window.location.href = `/submission?id=${s.id}`}
+              >
+                <span className="font-black text-[#1B2559] uppercase">{s.mName || 'Unknown Name'} <span className="text-[9px] font-bold text-[#A3AED0] ml-1">#{s.id}</span></span>
+                <span className="text-[10px] text-[#707EAE]">{s.email || 'No email'} - {s.request_type || 'Unknown type'}</span>
+              </div>
+            ))}
+          </>
+        )}
+        {officeMatches.length === 0 && submissionMatches.length === 0 && (
+          <div className="px-4 py-6 text-center text-[11px] font-bold text-[#707EAE]">No matches found for "{searchQuery}"</div>
+        )}
+      </div>
+    );
+  };
+
+  const dashboardTabs = [
+    { label: "All Responses", href: "/dashboard" },
+    { label: "By Department", href: "/departments" },
+    { label: "By Media Type", href: "#" },
+    { label: "Archived Forms", href: "#" },
+    { label: "Generate Spreadsheet", href: "#" },
+  ];
+
+  return (
+    <DashboardWrapper>
+      {/* Search and Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <h2 className="text-xl font-black text-[#1B2559] uppercase tracking-wider">Dashboard Overview</h2>
+        <SearchBar 
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setShowSearchDropdown(true); }}
+            onFocus={() => setShowSearchDropdown(true)}
+            onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
+        >
+            {showSearchDropdown && renderSearchResults()}
+        </SearchBar>
+      </div>
+
+      {/* Tabs Section */}
+      <TabList tabs={dashboardTabs} currentPath={currentPath} />
+
+      {/* Metrics Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
+        {[
+          { label: "Total Responses", value: metrics.total, color: "text-[#1B2559]", labelColor: "text-[#A3AED0]" },
+          { label: "Pending Review", value: metrics.pending, color: "text-[#FFB800]", labelColor: "text-[#FFB800]" },
+          { label: "In-Progress", value: metrics.inProcess, color: "text-[#0075FF]", labelColor: "text-[#0075FF]" },
+          { label: "Completed", value: metrics.completed, color: "text-[#05CD99]", labelColor: "text-[#05CD99]" },
+          { label: "Rejected", value: metrics.rejected, color: "text-[#EE5D50]", labelColor: "text-[#EE5D50]" },
+        ].map((m) => (
+          <div key={m.label} className="bg-white p-6 rounded-3xl shadow-[0_18px_40px_rgba(112,144,176,0.12)] border border-transparent flex flex-col items-center text-center transition-transform hover:scale-[1.02] cursor-default">
+            <p className={`text-[9px] font-black uppercase tracking-[0.15em] mb-2 ${m.labelColor}`}>{m.label}</p>
+            <p className="text-4xl font-black text-[#1B2559]">{m.value}</p>
           </div>
+        ))}
+      </div>
+
+      {/* Velocity Chart Section */}
+      <div className="bg-white p-8 rounded-[30px] shadow-[0_18px_40px_rgba(112,144,176,0.12)] mb-8  ">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-lg font-black text-[#1B2559]">Form Submission Velocity</h2>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-1.5 mb-12">
+          {["All", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((month, i) => (
+            <button
+              key={month}
+              onClick={() => setSelectedMonth(i === 0 ? null : i - 1)}
+              className={`px-3 py-1.5 rounded-xl text-[10px] font-black transition-all ${((selectedMonth === null && i === 0) || (selectedMonth === i - 1)) ? "bg-[#547DBE] text-white shadow-lg shadow-[#547DBE]/30" : "bg-[#F4F7FE] text-[#707EAE] hover:bg-[#E2E8F0]"}`}
+            >
+              {month}
+            </button>
+          ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-          <div className="md:col-span-1 border-b md:border-b-0 md:border-r border-slate-200/60 pb-4 md:pb-0 md:pr-4">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Avg. / Month</p>
-            <p className="text-3xl font-black text-gray-900 my-1">{data.submissionChart.avgPerMonth}</p>
-            <p className="text-[11px] text-gray-400">Calculated within timeframe.</p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-3 flex flex-col gap-2 md:pl-8">
+            <p className="text-[10px] font-black text-[#A3AED0] uppercase tracking-widest">Avg. / Month</p>
+            <p className="text-5xl font-black text-[#1B2559] leading-none">{monthlyAverage.toFixed(1)}</p>
           </div>
-          <div className="md:col-span-3">
-            <Chart options={barChartOptions} series={data.submissionChart.series} type="bar" height={260} />
+          <div className="lg:col-span-9">
+            <Chart options={barChartOptions} series={[{ name: "Submissions", data: velocityData }]} type="bar" height={280} />
           </div>
         </div>
       </div>
 
-      {/* 4. Side-by-Side Pie Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Categorical Breakdown Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Bar Chart for Request Types */}
+        <div className="bg-white p-8 rounded-[30px] shadow-[0_18px_40px_rgba(112,144,176,0.12)]">
+            <h2 className="text-lg font-black text-[#1B2559] pb-6 border-b border-[#F4F7FE] mb-6">Type of Request</h2>
+            <div className="flex items-center justify-center">
+              <Chart options={getHorizontalBarOptions(requestTypeData.labels)} series={[{ name: 'Count', data: requestTypeData.series }]} type="bar" width="100%" height={350} />
+            </div>
+        </div>
         
-        {/* Left Side: Type of Request Donut Chart */}
-        <div className="bg-slate-50/90 p-6 rounded-2xl shadow-xs border border-slate-200/60 flex flex-col justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">Type of Request</h2>
-            <p className="text-xs text-gray-400 mb-4">Distribution by Google Form selection rules</p>
-          </div>
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="min-w-[200px]">
-                <Chart 
-                  options={getDonutOptions(data.requestTypeChart.labels, 'Total Requests')} 
-                  series={data.requestTypeChart.series} 
-                  type="donut" 
-                  width="100%" 
-                  height={240} 
-                />
+        {/* Donut Chart for Service Type Breakdown */}
+        <div className="bg-white p-8 rounded-[30px] shadow-[0_18px_40px_rgba(112,144,176,0.12)]">
+            <h2 className="text-lg font-black text-[#1B2559] pb-6 border-b border-[#F4F7FE] mb-6">Service Type Breakdown</h2>
+            <div className="flex flex-col items-center justify-center gap-6">
+              <div className="h-[250px] w-full flex items-center justify-center">
+                <Chart options={getDonutOptions(serviceTypeData.labels)} series={serviceTypeData.series} type="donut" height="100%" />
+              </div>
+              <div className="w-full">
+                {renderLegend(serviceTypeData.labels)}
+              </div>
             </div>
-            <CustomLegend labels={data.requestTypeChart.labels} colors={chartColors} />
-          </div>
         </div>
-
-        {/* Right Side: Service Type Sub-Category Donut Chart */}
-        <div className="bg-slate-50/90 p-6 rounded-2xl shadow-xs border border-slate-200/60 flex flex-col justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">Service Type Breakdown</h2>
-            <p className="text-xs text-gray-400 mb-4">Social media assets and layout request segmentation</p>
-          </div>
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="min-w-[200px]">
-                <Chart 
-                  options={getDonutOptions(data.serviceTypeChart.labels, 'Total Assets')} 
-                  series={data.serviceTypeChart.series} 
-                  type="donut" 
-                  width="100%" 
-                  height={240} 
-                />
-            </div>
-            <CustomLegend labels={data.serviceTypeChart.labels} colors={chartColors} />
-          </div>
-        </div>
-
       </div>
 
-      {/* 5. Form Submissions Inbox Table */}
-      <div className="bg-slate-50/90 rounded-2xl shadow-xs border border-slate-200/60 overflow-hidden">
-        <div className="p-6 border-b border-slate-200/60 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">Form Responses Inbox</h2>
-            <p className="text-xs text-gray-400">Real-time processing deck</p>
-          </div>
-          <span className="text-xs text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full font-semibold">Live Feed Synced</span>
+      {/* Table Section */}
+      <div className="bg-white rounded-[30px] shadow-[0_18px_40px_rgba(112,144,176,0.12)] overflow-hidden">
+        <div className="p-8 pb-4">
+          <h2 className="text-lg font-black text-[#1B2559]">Form Responses Box</h2>
         </div>
-        
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-400 uppercase bg-slate-200/40 border-b border-slate-200/60">
-              <tr>
-                <th className="px-6 py-4">ID</th>
-                <th className="px-6 py-4">Requestor</th>
-                <th className="px-6 py-4">Department</th>
-                <th className="px-6 py-4">Media Service Type</th>
-                <th className="px-6 py-4">Date Submitted</th>
-                <th className="px-6 py-4">Status Action</th>
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-[#F4F7FE]">
+                <th className="px-8 py-4 text-[10px] font-black text-[#A3AED0] uppercase tracking-widest">Requestor</th>
+                <th className="px-8 py-4 text-[10px] font-black text-[#A3AED0] uppercase tracking-widest">Email</th>
+                <th className="px-8 py-4 text-[10px] font-black text-[#A3AED0] uppercase tracking-widest">Office</th>
+                <th className="px-8 py-4 text-[10px] font-black text-[#A3AED0] uppercase tracking-widest">Request Type</th>
+                <th className="px-8 py-4 text-[10px] font-black text-[#A3AED0] uppercase tracking-widest">Service</th>
+                <th className="px-8 py-4 text-[10px] font-black text-[#A3AED0] uppercase tracking-widest">Date</th>
+                <th className="px-8 py-4 text-[10px] font-black text-[#A3AED0] uppercase tracking-widest text-center">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200/60">
-              {data.submittedResponses.map((response) => (
-                <tr key={response.id} className="hover:bg-slate-200/30 transition">
-                  <td className="px-6 py-4 text-gray-400 font-mono">#{response.id}</td>
-                  <td className="px-6 py-4 font-semibold text-gray-900">{response.name}</td>
-                  <td className="px-6 py-4 font-semibold text-gray-600">{response.dept}</td>
-                  <td className="px-6 py-4">
-                    <span className="bg-slate-200 font-semibold text-slate-800 text-xs px-2.5 py-1 rounded-md font-medium max-w-[220px] inline-block truncate" title={response.type}>
-                      {response.type}
-                    </span>
+            <tbody className="divide-y divide-[#F4F7FE]">
+              {submissions.slice(0, 5).map((s) => (
+                <tr key={s.id} className="hover:bg-[#F4F7FE]/50 transition-colors cursor-pointer" onClick={() => window.location.href = `/submission?id=${s.id}`}>
+                  <td className="px-8 py-5 text-[10px] font-black text-[#1B2559] uppercase">{s.mName}</td>
+                  <td className="px-8 py-5 text-[10px] font-bold text-[#1B2559] lowercase">{s.email}</td>
+                  <td className="px-8 py-5 text-[10px] font-bold text-[#707EAE]">{s.office || "University Communications Office"}</td>
+                  <td className="px-8 py-5 text-[10px] font-bold text-[#707EAE] truncate max-w-[150px]">{s.request_type}</td>
+                  <td className="px-8 py-5 text-[10px] font-bold text-[#707EAE] truncate max-w-[200px]">{s.service}</td>
+                  <td className="px-8 py-5 text-[10px] font-bold text-[#707EAE]">
+                    {new Date(s.created_at).toLocaleDateString()}<br/>
+                    <span className="text-[9px] opacity-70">{new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </td>
-                  <td className="px-6 py-4 font-semibold text-gray-500">{response.date}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[response.status]}`}>
-                      {response.status}
-                    </span>
+                  <td className="px-8 py-5 text-center">
+                    {(() => {
+                      const status = s.status || 'Pending';
+                      let statusClass = 'bg-[#FFF9E6] text-[#FFB800]';
+                      if (status === 'In-process') statusClass = 'bg-[#E5F1FF] text-[#0075FF]';
+                      else if (status === 'Completed') statusClass = 'bg-[#E6FFF5] text-[#05CD99]';
+                      else if (status === 'Rejected') statusClass = 'bg-[#FFE6E6] text-[#EE5D50]';
+                      return (
+                        <span className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider ${statusClass}`}>
+                          {status}
+                        </span>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <div className="p-8 text-right">
+            <button className="text-[11px] font-black text-[#1B2559] uppercase tracking-widest hover:underline transition-all" onClick={() => window.location.href = '/submissions'}>View all Responses</button>
+        </div>
       </div>
-
-    </div>
+    </DashboardWrapper>
   );
 }

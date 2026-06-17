@@ -5,12 +5,23 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email === 'khan@gmail.com' && password === 'khan') {
-      window.location.href = '/dashboard';
-    } else {
-      alert('Invalid credentials');
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        window.location.href = '/dashboard';
+      } else {
+        alert('Invalid credentials');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred during login');
     }
   };
 
@@ -40,7 +51,7 @@ export default function LoginForm() {
       <div className="space-y-4">
         <button
           onClick={handleGoogleSignIn}
-          className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-bold text-sm hover:bg-slate-50 hover:border-slate-200 transition-all duration-300 active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 font-bold text-sm hover:bg-white hover:border-indigo-200 hover:shadow-lg transition-all duration-300 active:scale-[0.98]"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
